@@ -2,7 +2,7 @@ name: Update Gold Prices
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # every 6 hours
+    - cron: '*/15 * * * *'   # every 15 minutes
   workflow_dispatch:         # allows manual trigger from GitHub UI
 
 permissions:
@@ -29,6 +29,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add gold_prices_bangalore.csv
+          git add gold_prices_bangalore.csv gold_prices_live.csv
           git diff --staged --quiet || git commit -m "Update gold prices $(date)"
           git push
