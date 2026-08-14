@@ -25,7 +25,7 @@
 <p class="updated" id="updatedText"></p>
 
 <script>
-const CSV_URL = "https://raw.githubusercontent.com/codering101/gold-price-tracker/refs/heads/main/gold_prices_bangalore.csv";
+const CSV_URL = "https://raw.githubusercontent.com/codering101/gold-price-tracker/refs/heads/main/gold_prices_bangalore.csv?t=" + new Date().getTime();
 
 fetch(CSV_URL)
   .then(res => res.text())
