@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bangalore Gold Price Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; background: #0d1117; color: #e6edf3; margin: 0; padding: 20px; }
+  h1 { text-align: center; }
+  .cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px 30px; text-align: center; min-width: 150px; }
+  .card h2 { margin: 0 0 8px 0; font-size: 14px; color: #8b949e; }
+  .card .price { font-size: 28px; font-weight: bold; }
+  .up { color: #3fb950; }
+  .down { color: #f85149; }
+  #chartContainer { max-width: 800px; margin: 0 auto; }
+  .updated { text-align: center; color: #8b949e; font-size: 13px; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<h1>💰 Bangalore Gold Price Tracker</h1>
+<div class="cards" id="cards"></div>
+<div id="chartContainer"><canvas id="priceChart"></canvas></div>
+<p class="updated" id="updatedText"></p>
+
+<script>
+const CSV_URL = "https://raw.githubusercontent.com/codering101/gold-price-tracker/refs/heads/main/gold_prices_bangalore.csv";
+
+fetch(CSV_URL)
+  .then(res => res.text())
+  .then(csvText => {
+    const rows = csvText.trim().split("\n").map(r => r.split(","));
+    const headers = rows[0];
+    const data = rows.slice(1).map(r => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = r[i]);
+      return obj;
+    });
+
+    const latest = data[data.length - 1];
+    const cardsDiv = document.getElementById("cards");
+
+    ["24k", "22k"].forEach(key => {
+      const price = parseFloat(latest[key]).toLocaleString("en-IN");
+      const change = parseFloat(latest[key + "_change"]);
+      const changeClass = change >= 0 ? "up" : "down";
+      const changeSign = change >= 0 ? "+" : "";
+      cardsDiv.innerHTML += `
+        <div class="card">
+          <h2>${key.toUpperCase()} Gold / gram</h2>
+          <div class="price">₹${price}</div>
+          <div class="${changeClass}">${changeSign}${change}</div>
+        </div>`;
+    });
+
+    document.getElementById("updatedText").textContent =
+      "Last updated: " + latest.date;
+
+    const ctx = document.getElementById("priceChart").getContext("2d");
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: data.map(d => d.date),
+        datasets: [
+          {
+            label: "24K Gold (₹/gram)",
+            data: data.map(d => parseFloat(d["24k"])),
+            borderColor: "#f2c94c",
+            backgroundColor: "rgba(242,201,76,0.1)",
+            tension: 0.3
+          },
+          {
+            label: "22K Gold (₹/gram)",
+            data: data.map(d => parseFloat(d["22k"])),
+            borderColor: "#56ccf2",
+            backgroundColor: "rgba(86,204,242,0.1)",
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: "#e6edf3" } } },
+        scales: {
+          x: { ticks: { color: "#8b949e" } },
+          y: { ticks: { color: "#8b949e" } }
+        }
+      }
+    });
+  })
+  .catch(err => {
+    document.getElementById("cards").innerHTML = "Failed to load data: " + err;
+  });
+</script>
+
+</body>
+</html>
