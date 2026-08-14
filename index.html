@@ -25,9 +25,11 @@
 <p class="updated" id="updatedText"></p>
 
 <script>
-const CSV_URL = "https://raw.githubusercontent.com/codering101/gold-price-tracker/refs/heads/main/gold_prices_bangalore.csv?t=" + new Date().getTime();
+const BASE = "https://raw.githubusercontent.com/codering101/gold-price-tracker/refs/heads/main/";
+const bust = "?t=" + new Date().getTime();
 
-fetch(CSV_URL)
+// ---------- 1. Load LIVE snapshot file for the current-price cards ----------
+fetch(BASE + "gold_prices_live.csv" + bust)
   .then(res => res.text())
   .then(csvText => {
     const rows = csvText.trim().split("\n").map(r => r.split(","));
@@ -40,8 +42,10 @@ fetch(CSV_URL)
 
     const latest = data[data.length - 1];
     const cardsDiv = document.getElementById("cards");
+    cardsDiv.innerHTML = "";
 
-    ["24k", "22k"].forEach(key => {
+    ["24k", "22k", "18k"].forEach(key => {
+      if (!(key in latest)) return;
       const price = parseFloat(latest[key]).toLocaleString("en-IN");
       const change = parseFloat(latest[key + "_change"]);
       const changeClass = change >= 0 ? "up" : "down";
@@ -55,7 +59,23 @@ fetch(CSV_URL)
     });
 
     document.getElementById("updatedText").textContent =
-      "Last updated: " + latest.date;
+      "Last updated: " + latest.timestamp;
+  })
+  .catch(err => {
+    document.getElementById("cards").innerHTML = "Failed to load live data: " + err;
+  });
+
+// ---------- 2. Load DAILY history file for the chart ----------
+fetch(BASE + "gold_prices_bangalore.csv" + bust)
+  .then(res => res.text())
+  .then(csvText => {
+    const rows = csvText.trim().split("\n").map(r => r.split(","));
+    const headers = rows[0];
+    const data = rows.slice(1).map(r => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = r[i]);
+      return obj;
+    });
 
     const ctx = document.getElementById("priceChart").getContext("2d");
     new Chart(ctx, {
@@ -90,7 +110,7 @@ fetch(CSV_URL)
     });
   })
   .catch(err => {
-    document.getElementById("cards").innerHTML = "Failed to load data: " + err;
+    console.error("Failed to load chart data:", err);
   });
 </script>
 
